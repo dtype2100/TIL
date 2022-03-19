@@ -1,0 +1,326 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# setting"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from selenium import webdriver\n",
+    "from selenium.webdriver.common.keys import Keys\n",
+    "from selenium.webdriver.common.by import By\n",
+    "import time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 82,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 83,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from selenium.common.exceptions import NoSuchElementException"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 163,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 년월일 순서로 (ex. 20200501)\n",
+    "# type -> str\n",
+    "start_date = '20200801'\n",
+    "end_date = '20200831'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 179,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 해당 기사의 주소 리스트\n",
+    "url_list = []"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 180,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "driver = webdriver.Chrome('c:/kiwi/webdriver/chromedriver')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 언론사 선택"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 102,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 조선일보(1023) 중앙일보(1025) 동아일보(1020) 매경(1009)\n",
+    "paper = 1023"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 크롤링"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 기사 URL 읽어오기"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 181,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "num = 1\n",
+    "while True:\n",
+    "    check = len(url_list)\n",
+    "    driver.get(f'https://search.naver.com/search.naver?where=news&query=%EC%A7%80%EC%97%AD%ED%99%94%ED%8F%90&sm=tab_opt&sort=0&photo=0&field=0&pd=3&ds={start_date[0:4]}.{start_date[4:6]}.{start_date[6:]}&de={end_date[0:4]}.{end_date[4:6]}.{end_date[6:]}&docid=&related=0&mynews=1&office_type=1&office_section_code=1&news_office_checked={paper}&nso=so%3Ar%2Cp%3Afrom{start_date}to{end_date},a:all&start={num}')\n",
+    "    time.sleep(3)\n",
+    "    \n",
+    "    try:\n",
+    "        ul = driver.find_element(By.CSS_SELECTOR, '#main_pack > section > div > div.group_news > ul')\n",
+    "    except NoSuchElementException:\n",
+    "        print(\"Not exist paper\")\n",
+    "        break\n",
+    "    lis = ul.find_elements_by_tag_name(\"li\")\n",
+    "#     check = False\n",
+    "    if check_lis == lis:\n",
+    "        break\n",
+    "    for li in lis:\n",
+    "        tmp = li.get_attribute('id')\n",
+    "        if tmp == '':\n",
+    "            continue\n",
+    "        tmp_url = driver.find_element(By.CSS_SELECTOR, f'#{tmp} > div > div > a').get_attribute(\"href\")\n",
+    "        if tmp_url in url_list:\n",
+    "            continue\n",
+    "        url_list.append(tmp_url)\n",
+    "    \n",
+    "    if len(url_list) == check:\n",
+    "        break\n",
+    "    \n",
+    "    num += 10"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## URL의 기사 내용 받아오기"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 조선일보"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 184,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "제주 지역화폐 도입...올해 10월 200억 발행\n",
+      "제주도가 올해 10월 지역화폐 200억원을 발행한다.\n",
+      "제주도청 정문.\n",
+      "제주도는 3일 오전 원희룡 지사가 참석한 가운데 '제주지역화폐 발행 추진TF팀' 회의를 열고, 10월부터 제주 지역화폐를 발행하기로 결정했다고 밝혔다. 올해 지역화폐 발행규모는 200억원이다. 제주도는 2021년 1500억원, 2022년 2000억원 등 3년간 3700억원 발행을 목표로 하고 있다. 이를 위해 제주도는 '지역화폐 발행 및 운영에 관한 조례'를 입법예고했으며, 9월 제주도의회에 제출한다.\n",
+      "제주도는 또 지역화폐 발행에 따른 국비 16억원을 확보했고 이를 할인 또는 인센티브 제공에 투입할 예정이다. 제주 지역화폐는 주민과 관광객의 사용 편의성을 극대화할 수 있는 카드형과 모바일형 전자상품권 등 2종류로 발행된다.\n",
+      "대형마트와 사행·유흥업소 등을 제외한 지역내 가맹점으로 등록된 모든 점포에서 사용할 수 있다. 특히 제주도는 할인 또는 캐시백 제공 등의 다양한 인센티브를 제공해 지역화폐 이용을 활성화하는 방안도 도입할 예정이다.\n",
+      "제주도 관계자는 \"주민과 관광객의 소비로 소상공인과 자영업자의 매출 증대를 통한 지역경제 활성화를 위해 지역화폐 발행을 결정했다\"며 \"의회, 소비자단체, 상인회, 관련단체, 전문가 등으로 지역화폐 추진위원회를 구성해 지역화폐 발행과 운영에 관한 제반 사항을 협의할 계획이다\"고 말했다.\n",
+      "==============================\n",
+      "==============================\n",
+      "이재명 \"재난지원금 선별지급은 차별\" 진성준 \"하위 50%에만\"\n",
+      "이재명 경기도지사가 20일 오전 경기도 수원시 팔달구 경기도청에서 신종 코로나바이러스 감염증(코로나19) 수도권 대유행에 따른 대도민 긴급호소 기자회견을 하고 있다.\n",
+      "\n",
+      "더불어민주당 내에서도 2차 재난지원금을 두고 의견이 갈리고 있다. 이재명 경기도지사는 재난지원금을 전 국민을 대상으로 지급해야 한다고 주장하는 반면, 민주당 일부 의원들은 소득 하위 50%에게만 우선 지급하자고 했다.\n",
+      "\n",
+      "이 지사는 24일 \"2차 재난지원금의 선별 지급 주장은 상위소득 납세자에 대한 불합리한 차별이자 여당의 보편복지 노선에서 보면 어불성설\"이라고 했다. 이 지사는 이날 페이스북에 올린 글에서 \"재난지원금을 일부에게 지급하거나 전 국민에 지급할 재원을 소득 하위 50%에게만 2배씩 지급하자는 주장은 헌법상 평등 원칙을 위반해 국민 분열과 갈등을 초래하고 보수야당의 선별복지 노선에 동조하는 것\"이라며 이같이 말했다.\n",
+      "\n",
+      "이 지사는 \"별 차이도 없는 하위 50%와 하위 50.1%를 구별하는 것은 합리적 근거가 없다\"며 \"더 많은 세금을 냈거나 내야 할 사람들을 경제정책 집행에서 배제해 불이익을 주어서는 안 되고, 부자에 대한 관념적 적대성의 발현이라면 더더욱 안 될 일\"이라고 했다.\n",
+      "\n",
+      "이어 \"민주당이 보편복지를 주장하다가 갑자기 재난지원금만은 선별복지로 해야 한다니 납득이 안 된다\"며 \"재원 부담자와 수혜자를 분리해 가난한 일부 사람만 복지 혜택을 주면 재원 부담자인 상위소득자들의 반발로 하위소득자들의 복지 확대는 더 어렵게 된다\"고 했다. 이 지사는 '모든 국민에게 지역화폐로 인당 30만원 정도'를 지급해야 한다는 입장이다.\n",
+      "\n",
+      "하지만 민주당 일각에선 \"2차 재난지원금을 소득 하위 50%에만 지급하자\"는 주장이 나오고 있다. 민주당 전략기획위원장인 진성준 의원은 이날 오전 라디오에서 \"소득 하위 50%에게만 재난지원금을 지급할 경우 재정당국의 부담도 다소 줄어들 것\"이라며 \"이를 통해 빠른 결정과 집행이 가능할 것\"이라고 했다. 최고위원에 출마한 이원욱 의원도 \"전체 지급도 가능하지만, 선별적인 투자도 필요하다는 고민이 있다\"고 했다.\n",
+      "==============================\n",
+      "==============================\n",
+      "이재명, 문빠에 선전포고? \"민주당, 조폭·특정인 소유 아냐\"\n",
+      "이재명 지사\n",
+      "이재명 경기지사가 25일 “정당은 조폭이나 군대도 아니고 특정인의 소유도 아니다”고 밝혔다.\n",
+      "이 지사는 이날 페이스북에서 “조폭이나 군대에선 수뇌의 결정과 명령에 하부 조직원은 복종할 뿐”이라면서 “그러나 정당은 다양한 정치적 의견을 가진 국민들의 집합체”라고 했다. 그러면서 “민주국가에서 정당은 특정인이나 특정세력의 소유물도 아니며 국민의 것이자 당원의 것”이라고 했다.\n",
+      "이 지사가 ‘특정인’이나 ‘특정 세력’이 누군인지 밝히진 않았지만, 정치권에선 사실상 ‘문재인 대통령’과 ‘친문 세력(일명 문빠)’을 지칭한 것이란 말이 나왔다.\n",
+      "이 지사는 “당원은 누구나 당 정책에 의견을 낼 수 있고, 국민은 누구나 국가 정책 결정에 참여할 수 있다”면서 “정책이 결정되면 존중하지만 정책결정 전에는 다양한 의견을 자유롭게 내고 토론하는 것이 오히려 바람직하다”고 했다. 그러면서 “저도 국민이자 민주당 당원의 한 사람이고, 1370만 경기도정을 책임진 행정관으로서 경기도정에 영향을 미치는 집권여당 민주당의 정책에 대해 말할 수 있고 또 말해야 한다”고 했다.\n",
+      "이와 관련 한 여권 관계자는 “사실상 이 지사가 ‘친문 세력’에 선전포고를 한 것과 다름 없다”면서 “이는 민주당 정책에 이 지사의 의견이 제대로 반영되지 못하고 친문 세력에 배척되고 있다는 뜻”이라고 했다. 현 민주당이 ‘조폭’이나 ‘군대’처럼 일부 세력에 휘둘리는 바람에, ‘국민’이자 ‘당원’이고 ‘경기도정을 책임진 행정관’인 이 지사 자신의 의견은 사장되고 있다는 것이다.\n",
+      "이 지사는 \"코로나19 위기는 보건위기일 뿐 아니라 경제위기이기도 하다\"면서 \"경기도지사는 의료방역 뿐 아니라 경제방역에도 힘써야 한다\"고 했다. 그러면서 \"국민의 가처분소득과 소비를 늘리고 중소자영업자의 매출과 이에 따른 생산유발 효과를 내는 '시한부 지역화폐로 지급하는 기본소득형 재난지원금'이 반드시 필요하다\"고 했다.\n",
+      "그는 또 언론이 재난 지원 관련 민주당 논쟁에 대해 불협화음이라 하는데 대해서도 \"온당치 않다\"며 반박했다. 그는 \"당론을 모아가는 과정\"이라며 \"당론 결정전 당원의 주장은 모두 주장일 뿐 어떤 당원의 말은 당의 입장이고 어떤 당원의 말은 반기(反旗)일 수 없다\"고 했다.\n",
+      "이재명 지사와 문재인 대통령.\n",
+      "이 지사는 정당은 조폭이 아니다라고 재차 강조하며 다음과 같이 이 글을 끝맺었다.\n",
+      "정당은 조폭이나 군대와 다릅니다.\n",
+      "당이 결정하면 당원으로서 당연히 따를 것입니다.\n",
+      "그러나 정책 결정과정에서는 도민대표이자 당원으로서 적극적으로 의견을 내고 치열하게 논쟁하겠습니다.\n",
+      "==============================\n",
+      "==============================\n",
+      "이재명 \"2차 재난지원금 전 국민에 30만원씩\" 정부에 공식 건의\n",
+      "이재명 경기도지사가 24일 코로나 2차 대유행과 관련해 국민 1인당 30만원의 2차 재난지원금을 지원해 달라고 청와대와 총리실에 공식 건의했다.\n",
+      "코로나 관련 기자회견을 갖고 있는 이재명 경기지사.\n",
+      "\n",
+      "경기도의 건의안은 \"감염병 대유행에 따른 소비절벽과 고용대란 등 경제충격 완화를 위해 소멸성 지역화폐로 국민 1인당 30만원의 2차 재난지원금을 지급해야 한다\"는 내용을 담았다. 또 이 경우 전국 5184만 명 기준 15조 5520억 원이 필요할 것으로 추산했다.\n",
+      "\n",
+      "경기도는 \"경제성장률 전망치가 코로나19 장기화시 -2%까지 내려갈 것으로 전망되고 있으나, 재난지원금의 효과는 가계소득, 기업경기실사지수, 소비자심리지수 등 통계에서 다방면에서 확인되고 있다\"며 \"소비라는 실물경제에 대한 경제방역 효과뿐만 아니라 기업과 소비자의 심리를 긍정적으로 변화시켜 심리방역 효과도 있다\"고 주장했다.\n",
+      "또 \"재난지원금은 사용기한과 사용처가 정해진 소멸성 지역화폐로 지급했기 때문에 소비 진작 효과도 매우 컸다\"고 밝혔다.\n",
+      "\n",
+      "이 지사는 최근 소셜미디어에서 지역화폐형 기본소득 방식의 2차 재난지원금을 공식 건의하겠다는 방침을 밝혔다. 또 민주당 일각에서 제기되고 있는 하위소득자 선별 지급 방안에 대해서도 전체 국민을 대상으로 지급해야 한다고 주장하고 있다.\n",
+      "==============================\n",
+      "==============================\n",
+      "이재명 \"재난지원금은 경제정책\"...\"구제\" 주장 윤희숙 의원에 반박\n",
+      "이재명 경기지사가 2차 재난지원금 지급 관련 논쟁에 대해 “국민 분열과 갈등을 초래하며 선별지급으로 허비할 시간이 없다”며 “재난지원금 지급은 어려운 사람을 구제하는 목적이 아니라 경제 정책”이라고 거듭 주장했다.\n",
+      "이 지사의 이 같은 발언은 최근 보편지급·선별지급을 둘러싼 민주당 내부의 논란, “재난지원금은 구제를 목표로 해야 한다”는 미래통합당 윤희숙 의원의 주장에 대한 반론으로 읽히고 있다.\n",
+      "이 지사는 25일 자신의 소셜미디어에 ‘지금 필요한 것은 ‘구제’가 아닌 ‘경제정책’입니다’라는 글을 올렸다. 그는 “코로나 19 위기로 인한 지금의 경제위기는 공급이 부족한 것이 아니라 수요부족”이라며 “따라서 수요역량 강화에 집중해 수요확대로 경제를 선순환 시키는 데 중점을 둬야 한다”고 설명했다.\n",
+      "이재명 경기지사.\n",
+      "그러면서 “미국 등 많은 나라들이 국민들에게 현금을 지급했다. 이들 나라가 ‘국민 모두가 가난해서’ 현금을 지급했을까?”라고 반문했다. 그는 “(재난지원금 지급 이유는) 소비활동이 위축되면서 경제가 급격히 얼어붙은데 따른 경기부양 목적의 경제정책으로 국민들에게 직접 현금을 지급한 것”이라고 주장했다.\n",
+      "이 지사는 지역화폐 지급도 다시 강조했다. 이 지사는 “재난지원금을 현금으로 지급하면 불확실한 미래를 대비하려고 저축하는 경향이 있다”며 “현금 대신 기한이 정해진 ‘소멸성’ 지역화폐로 지급해야 한다”고 덧붙였다.\n",
+      "이와 함께 이 지사는 “전파를 막고 피해를 최소화하려면 의료방역도 경제방역도 모두 속도를 높여야 한다”며 “불필요한 혼란과 갈등을 초래하며 평등원칙에 위반해 세금 많이 낸 상위소득자를 배제하는 우를 범하지 말아야 한다”고 밝혔다.\n",
+      "==============================\n",
+      "==============================\n"
+     ]
+    },
+    {
+     "ename": "NoSuchElementException",
+     "evalue": "Message: no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\"//*[@id=\"fusion-app\"]/div[1]/div[2]/div/div/div[3]/h1/span\"}\n  (Session info: chrome=97.0.4692.71)\n",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mNoSuchElementException\u001b[0m                    Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-184-a98b278e9059>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      2\u001b[0m     \u001b[0mdriver\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mget\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0murl\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      3\u001b[0m     \u001b[0mtime\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m1\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 4\u001b[1;33m     \u001b[0mtitle\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mdriver\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfind_element_by_xpath\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'//*[@id=\"fusion-app\"]/div[1]/div[2]/div/div/div[3]/h1/span'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mtext\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m      5\u001b[0m     \u001b[0mcontent\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mdriver\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfind_element_by_xpath\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'//*[@id=\"fusion-app\"]/div[1]/div[2]/div/section/article/section'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mtext\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      6\u001b[0m     \u001b[0mprint\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mtitle\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;32mC:\\ProgramData\\Anaconda3\\lib\\site-packages\\selenium\\webdriver\\remote\\webdriver.py\u001b[0m in \u001b[0;36mfind_element_by_xpath\u001b[1;34m(self, xpath)\u001b[0m\n\u001b[0;32m    392\u001b[0m             \u001b[0melement\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mdriver\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfind_element_by_xpath\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'//div/td[1]'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    393\u001b[0m         \"\"\"\n\u001b[1;32m--> 394\u001b[1;33m         \u001b[1;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfind_element\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mby\u001b[0m\u001b[1;33m=\u001b[0m\u001b[0mBy\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mXPATH\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mvalue\u001b[0m\u001b[1;33m=\u001b[0m\u001b[0mxpath\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m    395\u001b[0m \u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    396\u001b[0m     \u001b[1;32mdef\u001b[0m \u001b[0mfind_elements_by_xpath\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mself\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mxpath\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;32mC:\\ProgramData\\Anaconda3\\lib\\site-packages\\selenium\\webdriver\\remote\\webdriver.py\u001b[0m in \u001b[0;36mfind_element\u001b[1;34m(self, by, value)\u001b[0m\n\u001b[0;32m    976\u001b[0m         return self.execute(Command.FIND_ELEMENT, {\n\u001b[0;32m    977\u001b[0m             \u001b[1;34m'using'\u001b[0m\u001b[1;33m:\u001b[0m \u001b[0mby\u001b[0m\u001b[1;33m,\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m--> 978\u001b[1;33m             'value': value})['value']\n\u001b[0m\u001b[0;32m    979\u001b[0m \u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    980\u001b[0m     \u001b[1;32mdef\u001b[0m \u001b[0mfind_elements\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mself\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mby\u001b[0m\u001b[1;33m=\u001b[0m\u001b[0mBy\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mID\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mvalue\u001b[0m\u001b[1;33m=\u001b[0m\u001b[1;32mNone\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;32mC:\\ProgramData\\Anaconda3\\lib\\site-packages\\selenium\\webdriver\\remote\\webdriver.py\u001b[0m in \u001b[0;36mexecute\u001b[1;34m(self, driver_command, params)\u001b[0m\n\u001b[0;32m    319\u001b[0m         \u001b[0mresponse\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mself\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mcommand_executor\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mexecute\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mdriver_command\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mparams\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    320\u001b[0m         \u001b[1;32mif\u001b[0m \u001b[0mresponse\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m--> 321\u001b[1;33m             \u001b[0mself\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0merror_handler\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mcheck_response\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mresponse\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m    322\u001b[0m             response['value'] = self._unwrap_value(\n\u001b[0;32m    323\u001b[0m                 response.get('value', None))\n",
+      "\u001b[1;32mC:\\ProgramData\\Anaconda3\\lib\\site-packages\\selenium\\webdriver\\remote\\errorhandler.py\u001b[0m in \u001b[0;36mcheck_response\u001b[1;34m(self, response)\u001b[0m\n\u001b[0;32m    240\u001b[0m                 \u001b[0malert_text\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mvalue\u001b[0m\u001b[1;33m[\u001b[0m\u001b[1;34m'alert'\u001b[0m\u001b[1;33m]\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mget\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'text'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    241\u001b[0m             \u001b[1;32mraise\u001b[0m \u001b[0mexception_class\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mmessage\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mscreen\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mstacktrace\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0malert_text\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m--> 242\u001b[1;33m         \u001b[1;32mraise\u001b[0m \u001b[0mexception_class\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mmessage\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mscreen\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mstacktrace\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m    243\u001b[0m \u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m    244\u001b[0m     \u001b[1;32mdef\u001b[0m \u001b[0m_value_or_default\u001b[0m\u001b[1;33m(\u001b[0m\u001b[0mself\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mobj\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mkey\u001b[0m\u001b[1;33m,\u001b[0m \u001b[0mdefault\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;31mNoSuchElementException\u001b[0m: Message: no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\"//*[@id=\"fusion-app\"]/div[1]/div[2]/div/div/div[3]/h1/span\"}\n  (Session info: chrome=97.0.4692.71)\n"
+     ]
+    }
+   ],
+   "source": [
+    "for url in url_list:\n",
+    "    driver.get(url)\n",
+    "    time.sleep(1)\n",
+    "    title = driver.find_element_by_xpath('//*[@id=\"fusion-app\"]/div[1]/div[2]/div/div/div[3]/h1/span').text\n",
+    "    content = driver.find_element_by_xpath('//*[@id=\"fusion-app\"]/div[1]/div[2]/div/section/article/section').text\n",
+    "    print(title)\n",
+    "    print(content)\n",
+    "    \n",
+    "    print('='*30)\n",
+    "    print('='*30)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.9"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": false,
+   "title_cell": "Table of Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {},
+   "toc_section_display": true,
+   "toc_window_display": false
+  },
+  "varInspector": {
+   "cols": {
+    "lenName": 16,
+    "lenType": 16,
+    "lenVar": 40
+   },
+   "kernels_config": {
+    "python": {
+     "delete_cmd_postfix": "",
+     "delete_cmd_prefix": "del ",
+     "library": "var_list.py",
+     "varRefreshCmd": "print(var_dic_list())"
+    },
+    "r": {
+     "delete_cmd_postfix": ") ",
+     "delete_cmd_prefix": "rm(",
+     "library": "var_list.r",
+     "varRefreshCmd": "cat(var_dic_list()) "
+    }
+   },
+   "types_to_exclude": [
+    "module",
+    "function",
+    "builtin_function_or_method",
+    "instance",
+    "_Feature"
+   ],
+   "window_display": false
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
