@@ -7,3 +7,5 @@ while True:
     if sum>=n:
         print(i)
         break
+
+# 에러수정

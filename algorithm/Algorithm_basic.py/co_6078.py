@@ -3,3 +3,5 @@ while True:
     print(x)
     if x == 'q':
         break
+
+    # 에러수정
